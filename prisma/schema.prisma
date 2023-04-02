@@ -11,8 +11,132 @@ generator client {
     provider = "prisma-client-js"
 }
 
-model Example {
-    id        String   @id @default(cuid())
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+model Stock {
+    id        Int      @id @default(autoincrement())
+    creadetAt DateTime @default(now())
+
+    productColorSize     String                 @db.VarChar(255)
+    product              String                 @db.VarChar(255)
+    color                String                 @db.VarChar(255)
+    size                 String                 @db.VarChar(255)
+    amount               Int
+    status               StockStatus
+    position             Position               @relation(fields: [positionId], references: [id])
+    positionId           Int
+    notes1               String                 @db.VarChar(255)
+    notes2               String                 @db.VarChar(255)
+    clientOrder          ClientOrder            @relation(fields: [clientOrderId], references: [id])
+    clientOrderId        Int
+    stockOrder           StockOrder             @relation(fields: [stockOrderId], references: [id])
+    stockOrderId         Int
+    soldAt               Float
+    productionCost       Float
+    CustomizationOnStock CustomizationOnStock[]
+
+    @@index([positionId])
+    @@index([clientOrderId])
+    @@index([stockOrderId])
+}
+
+model Customization {
+    id           Int                    @id @default(autoincrement())
+    name         String                 @unique @db.VarChar(255)
+    minQuantity  Int
+    baseQuantity Int
+    cost         Float
+    setupCost    Float
+    startupCost  Float
+    vat          Float
+    customizer   String                 @db.VarChar(255)
+    type         String                 @db.VarChar(255)
+    setupped     Boolean
+    uses         CustomizationOnStock[]
+}
+
+model CustomizationOnStock {
+    id              Int                 @id @default(autoincrement())
+    customization   Customization       @relation(fields: [customizationId], references: [id])
+    stock           Stock               @relation(fields: [stockId], references: [id])
+    status          CustomizationStatus
+    customizationId Int
+    stockId         Int
+
+    @@index([customizationId])
+    @@index([stockId])
+}
+
+model Position {
+    id         Int    @id @default(autoincrement())
+    identifier String @unique @db.VarChar(255)
+    address    String @db.VarChar(255)
+    room       String @db.VarChar(255)
+    scaffold   String @db.VarChar(255)
+
+    stocks Stock[]
+
+    @@index([address])
+}
+
+model Product {
+    id           Int    @id @default(autoincrement())
+    sku          String @db.VarChar(255)
+    baseQuantity Int
+    supplier     String @db.VarChar(255)
+    grammageM2   Int
+    material     Json
+    cost         Float
+    vat          Float
+    type         String @db.VarChar(255)
+}
+
+model ClientOrder {
+    id              Int         @id @default(autoincrement())
+    name            String      @unique @db.VarChar(255)
+    orderDate       DateTime    @default(now())
+    arrivalDate     DateTime
+    client          String      @db.VarChar(255)
+    shippingAddress String      @db.VarChar(255)
+    shippingCost    Float       @default(0)
+    addedCost       Float       @default(0)
+    status          OrderStatus @default(ORDERED)
+    organization    String      @db.VarChar(255)
+    notes           String      @db.VarChar(255)
+    items           Stock[]
+}
+
+model StockOrder {
+    id              Int         @id @default(autoincrement())
+    name            String      @unique @db.VarChar(255)
+    orderDate       DateTime    @default(now())
+    arrivalDate     DateTime
+    supplier        String      @db.VarChar(255)
+    shippingAddress String      @db.VarChar(255)
+    shippingCost    Float       @default(0)
+    addedCost       Float       @default(0)
+    status          OrderStatus @default(ORDERED)
+    notes           String      @db.VarChar(255)
+    items           Stock[]
+}
+
+enum StockStatus {
+    REQUIRED
+    ORDERED
+    STOCKED
+    PRODUCTION
+    READY
+    DELIVERED
+    LOST
+    RUINED
+}
+
+enum OrderStatus {
+    ORDERED
+    PARTIAL
+    DELIVERED
+}
+
+enum CustomizationStatus {
+    TODO
+    INPROGRESS
+    COMPLETED
 }
